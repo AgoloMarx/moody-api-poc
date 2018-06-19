@@ -53,7 +53,7 @@ function crawler() {
     getUrls: async (url: string, articleListSelector: string) => {
       try {
         console.log(colors.yellow(`> [Crawling] for article Urls ${url}`));
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
         const html = await page.content();
@@ -93,7 +93,7 @@ function crawler() {
         try {
           const articleUrl = articleUrls[i];
           console.log(colors.bold.green(`> [Scraping] article url for content: ${articlePrependUrl}${articleUrl}`));
-          const browser = await puppeteer.launch({ headless: true });
+          const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
           const page = await browser.newPage();
           await page.goto(`${articlePrependUrl}${articleUrl}`, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
           const html = await page.content();
