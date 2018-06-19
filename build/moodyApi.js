@@ -601,16 +601,17 @@ server.listen(process.env.PORT, function () {
             }
             if (process.env.NODE_ENV === 'local') {
               console.log('> Server is ready on http://localhost:' + process.env.PORT);
+            } else {
+              console.log('> Server is ready!');
             }
-            console.log('> Server is ready!');
-            _context.next = 5;
+            _context.next = 4;
             return (0, _connectToMongo2.default)();
 
-          case 5:
+          case 4:
             // Run cronjob to update DB
             (0, _cron2.default)();
 
-          case 6:
+          case 5:
           case 'end':
             return _context.stop();
         }
