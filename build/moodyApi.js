@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 4);
+/******/ 	return __webpack_require__(__webpack_require__.s = 7);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -117,99 +117,6 @@ module.exports = require("express");
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
-
-module.exports = require("axios");
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-__webpack_require__(5);
-
-var _articleRouter = __webpack_require__(6);
-
-var _articleRouter2 = _interopRequireDefault(_articleRouter);
-
-var _express = __webpack_require__(2);
-
-var _express2 = _interopRequireDefault(_express);
-
-var _http = __webpack_require__(16);
-
-var _http2 = _interopRequireDefault(_http);
-
-var _connectToMongo = __webpack_require__(17);
-
-var _connectToMongo2 = _interopRequireDefault(_connectToMongo);
-
-var _cron = __webpack_require__(19);
-
-var _cron2 = _interopRequireDefault(_cron);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-if (process.env.NODE_ENV === 'local') {
-  __webpack_require__(18).config();
-}
-
-var app = (0, _express2.default)();
-
-/* Creates server and web socket */
-var server = _http2.default.createServer(app);
-
-/* Set up apps with routers and their root URLs here */
-app.use('/article', _articleRouter2.default);
-
-/* Initialize server locally */
-server.listen(process.env.PORT, function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(error) {
-    return regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            if (error) {
-              console.log('Error initializing server: ' + error);
-            }
-            console.log('> Server is ready on http://localhost:' + process.env.PORT);
-            _context.next = 4;
-            return (0, _connectToMongo2.default)();
-
-          case 4:
-            // Run cronjob to update DB
-            (0, _cron2.default)();
-
-          case 5:
-          case 'end':
-            return _context.stop();
-        }
-      }
-    }, _callee, undefined);
-  }));
-
-  return function (_x) {
-    return _ref.apply(this, arguments);
-  };
-}());
-
-// To keep Heroku App alive
-setInterval(function () {
-  _http2.default.get("https://moody-api-poc.herokuapp.com/");
-}, 300000); // every 5 minutes (300000)
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-module.exports = require("babel-polyfill");
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -219,214 +126,23 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _article = __webpack_require__(7);
-
-var _article2 = _interopRequireDefault(_article);
-
-var _express = __webpack_require__(2);
-
-var _express2 = _interopRequireDefault(_express);
-
-var _crawler = __webpack_require__(8);
-
-var _crawler2 = _interopRequireDefault(_crawler);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-// For test
-
-var articleRouter = _express2.default.Router();
-
-/* Fetches the summarized articles in the last 24/7 given a project */
-articleRouter.get('/project/:projectId', function () {
-  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {
-    var projectId, articles;
-    return regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            _context.prev = 0;
-            projectId = req.params.projectId;
-            _context.next = 4;
-            return _article2.default.projects.get(projectId);
-
-          case 4:
-            articles = _context.sent;
-
-            res.set({
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Credentials': true,
-              'Access-Control-Allow-Origin': '*'
-            });
-            res.status(200).send(articles);
-            _context.next = 12;
-            break;
-
-          case 9:
-            _context.prev = 9;
-            _context.t0 = _context['catch'](0);
-
-            res.status(500).send({ error: _context.t0.message });
-
-          case 12:
-          case 'end':
-            return _context.stop();
-        }
-      }
-    }, _callee, undefined, [[0, 9]]);
-  }));
-
-  return function (_x, _x2) {
-    return _ref.apply(this, arguments);
-  };
-}());
-
-articleRouter.get('/crawl/:projectId', function () {
-  var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(req, res) {
-    var results;
-    return regeneratorRuntime.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            _context2.prev = 0;
-            _context2.next = 3;
-            return _crawler2.default.articles.saveAndSummarizeToDb();
-
-          case 3:
-            results = _context2.sent;
-
-            res.status(200).send('Crawl done!');
-            _context2.next = 10;
-            break;
-
-          case 7:
-            _context2.prev = 7;
-            _context2.t0 = _context2['catch'](0);
-
-            res.status(500).send({ error: _context2.t0.message });
-
-          case 10:
-          case 'end':
-            return _context2.stop();
-        }
-      }
-    }, _callee2, undefined, [[0, 7]]);
-  }));
-
-  return function (_x3, _x4) {
-    return _ref2.apply(this, arguments);
-  };
-}());
-
-exports.default = articleRouter;
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _article = __webpack_require__(0);
-
-var _article2 = _interopRequireDefault(_article);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
-function article() {
-  var _this = this;
-
-  this.projects = {
-    getAll: function () {
-      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, _this);
-      }));
-
-      function getAll() {
-        return _ref.apply(this, arguments);
-      }
-
-      return getAll;
-    }(),
-    get: function () {
-      var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(projectId) {
-        var articles;
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                console.log('> Fetching articles for project:', projectId);
-                _context2.next = 3;
-                return _article2.default.find({ project: projectId });
-
-              case 3:
-                articles = _context2.sent;
-                return _context2.abrupt('return', articles);
-
-              case 5:
-              case 'end':
-                return _context2.stop();
-            }
-          }
-        }, _callee2, _this);
-      }));
-
-      function get(_x) {
-        return _ref2.apply(this, arguments);
-      }
-
-      return get;
-    }()
-  };
-}
-
-var ArticleService = new article();
-exports.default = ArticleService;
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _axios = __webpack_require__(3);
+var _axios = __webpack_require__(4);
 
 var _axios2 = _interopRequireDefault(_axios);
 
-var _Agolo = __webpack_require__(9);
+var _Agolo = __webpack_require__(11);
 
 var _Agolo2 = _interopRequireDefault(_Agolo);
 
-var _cheerio = __webpack_require__(10);
+var _cheerio = __webpack_require__(12);
 
 var _cheerio2 = _interopRequireDefault(_cheerio);
 
-var _colors = __webpack_require__(11);
+var _colors = __webpack_require__(5);
 
 var _colors2 = _interopRequireDefault(_colors);
 
-var _momentTimezone = __webpack_require__(12);
+var _momentTimezone = __webpack_require__(6);
 
 var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
 
@@ -811,6 +527,114 @@ var Crawler = new crawler();
 exports.default = Crawler;
 
 /***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("axios");
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+module.exports = require("colors");
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports) {
+
+module.exports = require("moment-timezone");
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+__webpack_require__(8);
+
+var _articleRouter = __webpack_require__(9);
+
+var _articleRouter2 = _interopRequireDefault(_articleRouter);
+
+var _express = __webpack_require__(2);
+
+var _express2 = _interopRequireDefault(_express);
+
+var _http = __webpack_require__(16);
+
+var _http2 = _interopRequireDefault(_http);
+
+var _connectToMongo = __webpack_require__(17);
+
+var _connectToMongo2 = _interopRequireDefault(_connectToMongo);
+
+var _cron = __webpack_require__(18);
+
+var _cron2 = _interopRequireDefault(_cron);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+if (process.env.NODE_ENV === 'local') {
+  __webpack_require__(20).config();
+}
+
+var app = (0, _express2.default)();
+
+/* Creates server and web socket */
+var server = _http2.default.createServer(app);
+
+/* Set up apps with routers and their root URLs here */
+app.use('/article', _articleRouter2.default);
+
+/* Initialize server locally */
+server.listen(process.env.PORT, function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(error) {
+    return regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            if (error) {
+              console.log('Error initializing server: ' + error);
+            }
+            if (process.env.NODE_ENV === 'local') {
+              console.log('> Server is ready on http://localhost:' + process.env.PORT);
+            }
+            console.log('> Server is ready!');
+            _context.next = 5;
+            return (0, _connectToMongo2.default)();
+
+          case 5:
+            // Run cronjob to update DB
+            (0, _cron2.default)();
+
+          case 6:
+          case 'end':
+            return _context.stop();
+        }
+      }
+    }, _callee, undefined);
+  }));
+
+  return function (_x) {
+    return _ref.apply(this, arguments);
+  };
+}());
+
+// To keep Heroku App alive
+setInterval(function () {
+  _http2.default.get("https://moody-api-poc.herokuapp.com/");
+}, 300000); // every 5 minutes (300000)
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+module.exports = require("babel-polyfill");
+
+/***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -821,7 +645,198 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _axios = __webpack_require__(3);
+var _article = __webpack_require__(10);
+
+var _article2 = _interopRequireDefault(_article);
+
+var _express = __webpack_require__(2);
+
+var _express2 = _interopRequireDefault(_express);
+
+var _crawler = __webpack_require__(3);
+
+var _crawler2 = _interopRequireDefault(_crawler);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+// For test
+
+var articleRouter = _express2.default.Router();
+
+/* Fetches the summarized articles in the last 24/7 given a project */
+articleRouter.get('/project/:projectId', function () {
+  var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {
+    var projectId, articles;
+    return regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.prev = 0;
+            projectId = req.params.projectId;
+            _context.next = 4;
+            return _article2.default.projects.get(projectId);
+
+          case 4:
+            articles = _context.sent;
+
+            res.set({
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Credentials': true,
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.status(200).send(articles);
+            _context.next = 12;
+            break;
+
+          case 9:
+            _context.prev = 9;
+            _context.t0 = _context['catch'](0);
+
+            res.status(500).send({ error: _context.t0.message });
+
+          case 12:
+          case 'end':
+            return _context.stop();
+        }
+      }
+    }, _callee, undefined, [[0, 9]]);
+  }));
+
+  return function (_x, _x2) {
+    return _ref.apply(this, arguments);
+  };
+}());
+
+articleRouter.get('/crawl/:projectId', function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(req, res) {
+    var results;
+    return regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            _context2.prev = 0;
+            _context2.next = 3;
+            return _crawler2.default.articles.saveAndSummarizeToDb();
+
+          case 3:
+            results = _context2.sent;
+
+            res.status(200).send('Crawl done!');
+            _context2.next = 10;
+            break;
+
+          case 7:
+            _context2.prev = 7;
+            _context2.t0 = _context2['catch'](0);
+
+            res.status(500).send({ error: _context2.t0.message });
+
+          case 10:
+          case 'end':
+            return _context2.stop();
+        }
+      }
+    }, _callee2, undefined, [[0, 7]]);
+  }));
+
+  return function (_x3, _x4) {
+    return _ref2.apply(this, arguments);
+  };
+}());
+
+exports.default = articleRouter;
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _article = __webpack_require__(0);
+
+var _article2 = _interopRequireDefault(_article);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+function article() {
+  var _this = this;
+
+  this.projects = {
+    getAll: function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, _this);
+      }));
+
+      function getAll() {
+        return _ref.apply(this, arguments);
+      }
+
+      return getAll;
+    }(),
+    get: function () {
+      var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(projectId) {
+        var articles;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                console.log('> Fetching articles for project:', projectId);
+                _context2.next = 3;
+                return _article2.default.find({ project: projectId });
+
+              case 3:
+                articles = _context2.sent;
+                return _context2.abrupt('return', articles);
+
+              case 5:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, _this);
+      }));
+
+      function get(_x) {
+        return _ref2.apply(this, arguments);
+      }
+
+      return get;
+    }()
+  };
+}
+
+var ArticleService = new article();
+exports.default = ArticleService;
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _axios = __webpack_require__(4);
 
 var _axios2 = _interopRequireDefault(_axios);
 
@@ -892,22 +907,10 @@ var Agolo = new agolo();
 exports.default = Agolo;
 
 /***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-module.exports = require("cheerio");
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports) {
-
-module.exports = require("colors");
-
-/***/ }),
 /* 12 */
 /***/ (function(module, exports) {
 
-module.exports = require("moment-timezone");
+module.exports = require("cheerio");
 
 /***/ }),
 /* 13 */
@@ -1065,12 +1068,6 @@ exports.default = connectToMongo;
 
 /***/ }),
 /* 18 */
-/***/ (function(module, exports) {
-
-module.exports = require("dotenv");
-
-/***/ }),
-/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1082,18 +1079,29 @@ Object.defineProperty(exports, "__esModule", {
 
 var initCronJob = function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-    var crawlContentTimes, crawlContentJob;
+    var crawlContentTimes, companyCrawlJob;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
             /* Seconds, minutes, hours, day of month, months, day of week */
             crawlContentTimes = '00 00 07 * * *';
-            crawlContentJob = new _.CronJob(crawlContentTimes, function () {
-              return crawler.articles.saveAndSummarizeToDb();
-            }, null, true, 'America/New_York');
+            // let crawlContentJob = new CronJob(crawlContentTimes, () => crawler.articles.saveAndSummarizeToDb(), null, true, 'America/New_York');
+            // const companyCrawlJob = new cron.CronJob({
+            //   cronTime: '00 00 07 * * *',
+            //   onTick: () => crawler.articles.saveAndSummarizeToDb(),
+            //   start: true,
+            //   timeZone: 'America/New_York'
+            // });
+            // companyCrawlJob.start();
+            // console.log('> Company crawl job status:', companyCrawlJob.running);
 
-            console.log('> Crawling Web for articles and summarizing...'.bold.blue, crawlContentTimes.yellow, crawlContentJob.cronTime.hour);
+            companyCrawlJob = _nodeCron2.default.schedule('* * 07 * *', function () {
+              console.log('> Starting daily crawl at: ' + (0, _momentTimezone2.default)().tz('America/New_York').format('LLLL'));
+              _crawler2.default.articles.saveAndSummarizeToDb();
+            }, false);
+
+            companyCrawlJob.start();
 
           case 3:
           case 'end':
@@ -1108,21 +1116,40 @@ var initCronJob = function () {
   };
 }();
 
-var _ = __webpack_require__(19);
-
-var _colors = __webpack_require__(11);
+var _colors = __webpack_require__(5);
 
 var _colors2 = _interopRequireDefault(_colors);
 
-var _crawler = __webpack_require__(8);
+var _crawler = __webpack_require__(3);
 
 var _crawler2 = _interopRequireDefault(_crawler);
+
+var _nodeCron = __webpack_require__(19);
+
+var _nodeCron2 = _interopRequireDefault(_nodeCron);
+
+var _momentTimezone = __webpack_require__(6);
+
+var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } // Cronjob for crawling and summarizing articles
 
+
 exports.default = initCronJob;
+
+/***/ }),
+/* 19 */
+/***/ (function(module, exports) {
+
+module.exports = require("node-cron");
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports) {
+
+module.exports = require("dotenv");
 
 /***/ })
 /******/ ]);

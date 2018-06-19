@@ -24,7 +24,10 @@ server.listen(process.env.PORT, async (error) => {
   if (error) {
     console.log(`Error initializing server: ${error}`);
   }
-  console.log(`> Server is ready on http://localhost:${process.env.PORT}`);
+  if (process.env.NODE_ENV === 'local') {
+    console.log(`> Server is ready on http://localhost:${process.env.PORT}`);
+  }
+  console.log('> Server is ready!');
   await connectToMongo();
   // Run cronjob to update DB
   initCronJob();
