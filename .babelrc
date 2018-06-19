@@ -1,0 +1,19 @@
+{
+  "presets": ["es2015", "stage-2", "env", "flow"],
+  "plugins": [
+    ["transform-flow-strip-types"],
+    ["transform-class-properties"],
+    ["module-resolver", {
+      "root": ["."],
+      "alias": {
+        "constants": "./src/constants",
+        "controllers": "./src/controllers",
+        "cron": "./src/cron",
+        "models": "./src/models",
+        "services": "./src/services",
+        "utils": "./src/utils"
+      },
+      "cwd": "babelrc"
+    }]
+  ]
+}
