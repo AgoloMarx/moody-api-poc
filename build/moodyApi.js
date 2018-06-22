@@ -70,38 +70,14 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 7);
+/******/ 	return __webpack_require__(__webpack_require__.s = 9);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-var mongoose = __webpack_require__(1);
-
-var ArticleSchema = new mongoose.Schema({
-  id: mongoose.Schema.Types.ObjectId,
-  summary_title: String,
-  summary_points: Array,
-  site_name: String,
-  site_url: String,
-  article_url: String,
-  original_text: String,
-  original_header: String,
-  summarized: Boolean,
-  project: String,
-  date_written: String
-});
-
-var Article = mongoose.model('Article', ArticleSchema);
-
-exports.default = Article;
+module.exports = require("moment-timezone");
 
 /***/ }),
 /* 1 */
@@ -113,7 +89,7 @@ module.exports = require("mongoose");
 /* 2 */
 /***/ (function(module, exports) {
 
-module.exports = require("express");
+module.exports = require("dotenv");
 
 /***/ }),
 /* 3 */
@@ -126,37 +102,89 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _axios = __webpack_require__(4);
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+if (process.env.NODE_ENV === 'local') {
+  __webpack_require__(2).config();
+}
+
+var ArticleSchema = new _mongoose2.default.Schema({
+  id: _mongoose2.default.Schema.Types.ObjectId,
+  summary_title: String,
+  summary_points: Array,
+  site_name: String,
+  site_url: String,
+  article_url: String,
+  original_text: String,
+  original_header: String,
+  summarized: Boolean,
+  project: String,
+  date_written: String
+});
+
+var connection = _mongoose2.default.createConnection(process.env.MONGO_URL);
+var Article = connection.model('Article', ArticleSchema);
+
+exports.default = Article;
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = require("mongoose-float");
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+module.exports = require("express");
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _axios = __webpack_require__(7);
 
 var _axios2 = _interopRequireDefault(_axios);
 
-var _Agolo = __webpack_require__(11);
+var _Agolo = __webpack_require__(18);
 
 var _Agolo2 = _interopRequireDefault(_Agolo);
 
-var _cheerio = __webpack_require__(12);
+var _cheerio = __webpack_require__(19);
 
 var _cheerio2 = _interopRequireDefault(_cheerio);
 
-var _colors = __webpack_require__(5);
+var _colors = __webpack_require__(8);
 
 var _colors2 = _interopRequireDefault(_colors);
 
-var _momentTimezone = __webpack_require__(6);
+var _momentTimezone = __webpack_require__(0);
 
 var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
 
-var _underscore = __webpack_require__(13);
+var _underscore = __webpack_require__(20);
 
-var _puppeteer = __webpack_require__(14);
+var _puppeteer = __webpack_require__(21);
 
 var _puppeteer2 = _interopRequireDefault(_puppeteer);
 
-var _article = __webpack_require__(0);
+var _article = __webpack_require__(3);
 
 var _article2 = _interopRequireDefault(_article);
 
-var _constants = __webpack_require__(15);
+var _constants = __webpack_require__(22);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -184,6 +212,7 @@ function crawler() {
                 _context.prev = 0;
 
                 console.log(_colors2.default.yellow('> [Crawling] for article Urls ' + url));
+                // const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
                 _context.next = 4;
                 return _puppeteer2.default.launch({ headless: true });
 
@@ -195,7 +224,7 @@ function crawler() {
               case 7:
                 page = _context.sent;
                 _context.next = 10;
-                return page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
+                return page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 });
 
               case 10:
                 _context.next = 12;
@@ -216,20 +245,24 @@ function crawler() {
                 // Clean articles to remove duplicate links if any
                 _articleUrls = (0, _underscore.uniq)(_articleUrls);
                 console.log(_colors2.default.green.bold('> Found ' + _articleUrls.length + ' unique article links'));
+                _context.next = 21;
+                return browser.close();
+
+              case 21:
                 return _context.abrupt('return', _articleUrls);
 
-              case 22:
-                _context.prev = 22;
+              case 24:
+                _context.prev = 24;
                 _context.t0 = _context['catch'](0);
 
                 console.log('> Error in crawling for article urls: ', _context.t0.message);
 
-              case 25:
+              case 27:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, _this, [[0, 22]]);
+        }, _callee, _this, [[0, 24]]);
       }));
 
       function getUrls(_x, _x2) {
@@ -243,37 +276,38 @@ function crawler() {
      */
     getContent: function () {
       var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(crawlParams) {
-        var articleUrls, articlePrependUrl, articleHeaderSelector, articleDateSelector, articleTextSelector, hasWriter, hasHeader, hasDate, siteArticles, i, articleUrl, browser, page, html, $, articleHeader, articleWriter, articleDate, articleText, article;
+        var articleUrls, articlePrependUrl, articleHeaderSelector, articleDateSelector, articleTextSelector, hasWriter, hasHeader, hasDate, siteArticles, browser, i, articleUrl, page, html, $, articleHeader, articleWriter, articleDate, articleText, article;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 articleUrls = crawlParams.articleUrls, articlePrependUrl = crawlParams.articlePrependUrl, articleHeaderSelector = crawlParams.articleHeaderSelector, articleDateSelector = crawlParams.articleDateSelector, articleTextSelector = crawlParams.articleTextSelector, hasWriter = crawlParams.hasWriter, hasHeader = crawlParams.hasHeader, hasDate = crawlParams.hasDate;
                 siteArticles = [];
+                _context2.next = 4;
+                return _puppeteer2.default.launch({ headless: true });
+
+              case 4:
+                browser = _context2.sent;
                 i = 0;
 
-              case 3:
+              case 6:
                 if (!(i < articleUrls.length)) {
                   _context2.next = 33;
                   break;
                 }
 
-                _context2.prev = 4;
+                _context2.prev = 7;
                 articleUrl = articleUrls[i];
 
                 console.log(_colors2.default.bold.green('> [Scraping] article url for content: ' + articlePrependUrl + articleUrl));
-                _context2.next = 9;
-                return _puppeteer2.default.launch({ headless: true });
-
-              case 9:
-                browser = _context2.sent;
+                // const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
                 _context2.next = 12;
                 return browser.newPage();
 
               case 12:
                 page = _context2.sent;
                 _context2.next = 15;
-                return page.goto('' + articlePrependUrl + articleUrl, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
+                return page.goto('' + articlePrependUrl + articleUrl, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 });
 
               case 15:
                 _context2.next = 17;
@@ -300,24 +334,28 @@ function crawler() {
 
               case 27:
                 _context2.prev = 27;
-                _context2.t0 = _context2['catch'](4);
+                _context2.t0 = _context2['catch'](7);
 
                 console.log('Error scraping url: ' + articleUrls[i] + ': \n ' + _context2.t0.message);
 
               case 30:
                 i++;
-                _context2.next = 3;
+                _context2.next = 6;
                 break;
 
               case 33:
+                _context2.next = 35;
+                return browser.close();
+
+              case 35:
                 return _context2.abrupt('return', siteArticles);
 
-              case 34:
+              case 36:
               case 'end':
                 return _context2.stop();
             }
           }
-        }, _callee2, _this, [[4, 27]]);
+        }, _callee2, _this, [[7, 27]]);
       }));
 
       function getContent(_x3) {
@@ -409,10 +447,10 @@ function crawler() {
      * @description save each article from each
      */
     saveAndSummarizeToDb: function () {
-      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
-        var allSitesArticles, i, siteArticlesWithInfo, _name, _url, _siteArticles2, _loop, j;
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {
+        var allSitesArticles, i, siteArticlesWithInfo, _name, _url, _siteArticles2, j;
 
-        return regeneratorRuntime.wrap(function _callee4$(_context5) {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
@@ -425,16 +463,25 @@ function crawler() {
 
               case 4:
                 if (!(i < allSitesArticles.length)) {
-                  _context5.next = 17;
+                  _context5.next = 22;
                   break;
                 }
 
                 siteArticlesWithInfo = allSitesArticles[i];
                 _name = siteArticlesWithInfo.name, _url = siteArticlesWithInfo.url, _siteArticles2 = siteArticlesWithInfo.siteArticles;
-                _loop = /*#__PURE__*/regeneratorRuntime.mark(function _loop(j) {
+                j = 0;
+
+              case 8:
+                if (!(j < _siteArticles2.length)) {
+                  _context5.next = 19;
+                  break;
+                }
+
+                _context5.prev = 9;
+                return _context5.delegateYield( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {
                   var article, originalText, originalHeader, options, _ref5, summary_title, summary_points, summarizedArticle, query;
 
-                  return regeneratorRuntime.wrap(function _loop$(_context4) {
+                  return regeneratorRuntime.wrap(function _callee4$(_context4) {
                     while (1) {
                       switch (_context4.prev = _context4.next) {
                         case 0:
@@ -484,34 +531,35 @@ function crawler() {
                           return _context4.stop();
                       }
                     }
-                  }, _loop, _this);
-                });
-                j = 0;
-
-              case 9:
-                if (!(j < _siteArticles2.length)) {
-                  _context5.next = 14;
-                  break;
-                }
-
-                return _context5.delegateYield(_loop(j), 't0', 11);
+                  }, _callee4, _this);
+                })(), 't0', 11);
 
               case 11:
-                j++;
-                _context5.next = 9;
+                _context5.next = 16;
                 break;
 
-              case 14:
+              case 13:
+                _context5.prev = 13;
+                _context5.t1 = _context5['catch'](9);
+
+                console.log('Error in summarizing article:: \n' + _context5.t1.message);
+
+              case 16:
+                j++;
+                _context5.next = 8;
+                break;
+
+              case 19:
                 i++;
                 _context5.next = 4;
                 break;
 
-              case 17:
+              case 22:
               case 'end':
                 return _context5.stop();
             }
           }
-        }, _callee4, _this);
+        }, _callee5, _this, [[9, 13]]);
       }));
 
       function saveAndSummarizeToDb() {
@@ -519,6 +567,53 @@ function crawler() {
       }
 
       return saveAndSummarizeToDb;
+    }(),
+    getPage: function () {
+      var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {
+        var browser, page, url, html;
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                _context6.next = 2;
+                return _puppeteer2.default.launch({ headless: true });
+
+              case 2:
+                browser = _context6.sent;
+                _context6.next = 5;
+                return browser.newPage();
+
+              case 5:
+                page = _context6.sent;
+                url = 'http://localhost:3000/';
+                _context6.next = 9;
+                return page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 });
+
+              case 9:
+                _context6.next = 11;
+                return page.content();
+
+              case 11:
+                html = _context6.sent;
+                _context6.next = 14;
+                return browser.close;
+
+              case 14:
+                return _context6.abrupt('return', html);
+
+              case 15:
+              case 'end':
+                return _context6.stop();
+            }
+          }
+        }, _callee6, _this);
+      }));
+
+      function getPage() {
+        return _ref6.apply(this, arguments);
+      }
+
+      return getPage;
     }()
   };
 }
@@ -527,58 +622,56 @@ var Crawler = new crawler();
 exports.default = Crawler;
 
 /***/ }),
-/* 4 */
+/* 7 */
 /***/ (function(module, exports) {
 
 module.exports = require("axios");
 
 /***/ }),
-/* 5 */
+/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("colors");
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-module.exports = require("moment-timezone");
-
-/***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-__webpack_require__(8);
+__webpack_require__(10);
 
-var _articleRouter = __webpack_require__(9);
+var _articleRouter = __webpack_require__(11);
 
 var _articleRouter2 = _interopRequireDefault(_articleRouter);
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(5);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _http = __webpack_require__(16);
+var _http = __webpack_require__(23);
 
 var _http2 = _interopRequireDefault(_http);
 
-var _connectToMongo = __webpack_require__(17);
+var _connectToMongo = __webpack_require__(24);
 
 var _connectToMongo2 = _interopRequireDefault(_connectToMongo);
 
-var _cron = __webpack_require__(18);
+var _cron = __webpack_require__(25);
 
 var _cron2 = _interopRequireDefault(_cron);
+
+var _websiteScraper = __webpack_require__(27);
+
+var _websiteScraper2 = _interopRequireDefault(_websiteScraper);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 if (process.env.NODE_ENV === 'local') {
-  __webpack_require__(20).config();
+  __webpack_require__(2).config();
 }
 
 var app = (0, _express2.default)();
@@ -604,14 +697,11 @@ server.listen(process.env.PORT, function () {
             } else {
               console.log('> Server is ready!');
             }
-            _context.next = 4;
-            return (0, _connectToMongo2.default)();
-
-          case 4:
+            // await connectToMongo();
             // Run cronjob to update DB
-            (0, _cron2.default)();
+            // initCronJob();
 
-          case 5:
+          case 2:
           case 'end':
             return _context.stop();
         }
@@ -626,17 +716,17 @@ server.listen(process.env.PORT, function () {
 
 // To keep Heroku App alive
 setInterval(function () {
-  _http2.default.get("https://moody-api-poc.herokuapp.com/");
+  https.get("https://moody-api-poc.herokuapp.com/");
 }, 300000); // every 5 minutes (300000)
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("babel-polyfill");
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -646,15 +736,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _article = __webpack_require__(10);
+var _article = __webpack_require__(12);
 
 var _article2 = _interopRequireDefault(_article);
 
-var _express = __webpack_require__(2);
+var _express = __webpack_require__(5);
 
 var _express2 = _interopRequireDefault(_express);
 
-var _crawler = __webpack_require__(3);
+var _crawler = __webpack_require__(6);
 
 var _crawler2 = _interopRequireDefault(_crawler);
 
@@ -747,10 +837,53 @@ articleRouter.get('/crawl/:projectId', function () {
   };
 }());
 
+articleRouter.get('/page/get', function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(req, res) {
+    var page;
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _context3.prev = 0;
+            _context3.next = 3;
+            return _crawler2.default.articles.getPage();
+
+          case 3:
+            page = _context3.sent;
+
+            res.set({
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Credentials': true,
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.status(200).send(page);
+            res.status(200).send('Crawl done!');
+            _context3.next = 12;
+            break;
+
+          case 9:
+            _context3.prev = 9;
+            _context3.t0 = _context3['catch'](0);
+
+            res.status(500).send({ error: _context3.t0.message });
+
+          case 12:
+          case 'end':
+            return _context3.stop();
+        }
+      }
+    }, _callee3, undefined, [[0, 9]]);
+  }));
+
+  return function (_x5, _x6) {
+    return _ref3.apply(this, arguments);
+  };
+}());
+
 exports.default = articleRouter;
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -760,13 +893,74 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _article = __webpack_require__(0);
+var _momentTimezone = __webpack_require__(0);
 
-var _article2 = _interopRequireDefault(_article);
+var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
+
+var _article2 = __webpack_require__(3);
+
+var _article3 = _interopRequireDefault(_article2);
+
+var _agoloArticle = __webpack_require__(13);
+
+var _agoloArticle2 = _interopRequireDefault(_agoloArticle);
+
+var _cluster = __webpack_require__(14);
+
+var _cluster2 = _interopRequireDefault(_cluster);
+
+var _feed = __webpack_require__(15);
+
+var _feed2 = _interopRequireDefault(_feed);
+
+var _trimCluster = __webpack_require__(16);
+
+var _trimCluster2 = _interopRequireDefault(_trimCluster);
+
+var _trimArticle = __webpack_require__(17);
+
+var _trimArticle2 = _interopRequireDefault(_trimArticle);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+// Mapping of Feed Ids to project
+var projectToFeedId = {
+  'IR-I': '5b2b989ca71f7b2ffc7401ac', // Production feed
+  'IR-II': '5b2acbbb2d25a39cf00935ca', // Production feed
+  'IR-III': '5b2acbec2d25a39cf00935cb', // Production feed
+  'IB-I': '5b2ba0dda71f7b2ffc7401b0', // Production feed
+  'IB-II': '5b2ba12ba71f7b2ffc7401b2', // Production feed
+  'IB-III-feed': '5b2ba2672d25a39cf00935d1' // Production feed
+};
+
+var DUMP = [{
+  articles: [{
+    articleId: 'aasdma',
+    site: 'Bloombergview',
+    text: 'Donald Trump, in an interview...',
+    title: 'Nixon failed',
+    url: 'www.google.com',
+    publishedAt: 'June 19 2018'
+  }, {
+    articleId: 'aasdma',
+    site: 'Bloombergview',
+    text: 'Donald Trump, in an interview...',
+    title: 'Nixon failed',
+    url: 'www.google.com',
+    publishedAt: 'June 18 2018'
+  }],
+  cluster: {
+    clusterId: 'a;sdmas;d',
+    points: ['Hello', 'world'],
+    summary_title: 'Donald Trump!',
+    score: 5.00,
+    date_written: 'June 20, 2018'
+  }
+}];
+
+var SCRAPED_PROJECTS = ['IB-III'];
 
 function article() {
   var _this = this;
@@ -793,20 +987,114 @@ function article() {
     }(),
     get: function () {
       var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(projectId) {
-        var articles;
+        var articles, feedId, startDate, clusters, fullClusters, i, _articles, cluster, articleIds, j, articleId, _article, trimmedCluster, fullCluster;
+
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 console.log('> Fetching articles for project:', projectId);
-                _context2.next = 3;
-                return _article2.default.find({ project: projectId });
+                // Check if project is manually scraped. If it is, use main DB
 
-              case 3:
+                if (!SCRAPED_PROJECTS.includes(projectId)) {
+                  _context2.next = 6;
+                  break;
+                }
+
+                _context2.next = 4;
+                return _article3.default.find({ project: projectId });
+
+              case 4:
                 articles = _context2.sent;
                 return _context2.abrupt('return', articles);
 
-              case 5:
+              case 6:
+
+                // If project is a feed on Agolo webapp, use Agolo DB to get cluster
+                feedId = projectToFeedId[projectId];
+
+                if (feedId) {
+                  _context2.next = 9;
+                  break;
+                }
+
+                return _context2.abrupt('return', []);
+
+              case 9:
+                console.log('> Project ' + projectId + ' belongs to Feed: "' + feedId + '"');
+                startDate = new Date();
+
+                startDate.setHours(0, 0, 0, 0);
+                startDate.setDate(startDate.getDate() - 1);
+                _context2.next = 15;
+                return _cluster2.default.find({
+                  feed_id: feedId,
+                  'timestamps.article_timestamps.first_article_published': { $gte: startDate, $exists: true }, // Only get clusters joined last 48 hours
+                  // 'timestamps.article_timestamps.latest_article_published': { $gte: startDate, $exists: true },
+                  summary: { $exists: true, $ne: null, $not: { $size: 0 } },
+                  articles: { $exists: true, $ne: null, $not: { $size: 0 } },
+                  deleted: { $ne: true }
+                }, 'title summary articles score _id last_updated_at');
+
+              case 15:
+                clusters = _context2.sent;
+                fullClusters = [];
+
+                console.log('Found ' + clusters.length + ' for project ' + projectId);
+                // Naively look for all articles belonging to a cluster, an improvement would be to query for all articles matching the feed and then matching it with the cluster of interest
+                i = 0;
+
+              case 19:
+                if (!(i < clusters.length)) {
+                  _context2.next = 39;
+                  break;
+                }
+
+                _articles = [];
+                cluster = clusters[i];
+                articleIds = cluster.articles;
+                j = 0;
+
+              case 24:
+                if (!(j < articleIds.length)) {
+                  _context2.next = 33;
+                  break;
+                }
+
+                articleId = articleIds[j];
+                _context2.next = 28;
+                return _agoloArticle2.default.findOne({ _id: articleId }, 'url text sources title _id published_at');
+
+              case 28:
+                _article = _context2.sent;
+
+                // Save articles that make up the cluster
+                _articles.push((0, _trimArticle2.default)(_article));
+
+              case 30:
+                j++;
+                _context2.next = 24;
+                break;
+
+              case 33:
+                // Do not pass down fields we are not interested in
+                trimmedCluster = (0, _trimCluster2.default)(cluster);
+                fullCluster = {
+                  articles: _articles,
+                  cluster: trimmedCluster
+                };
+
+                fullClusters.push(fullCluster);
+
+              case 36:
+                i++;
+                _context2.next = 19;
+                break;
+
+              case 39:
+                return _context2.abrupt('return', fullClusters);
+
+              case 40:
               case 'end':
                 return _context2.stop();
             }
@@ -827,7 +1115,7 @@ var ArticleService = new article();
 exports.default = ArticleService;
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -837,7 +1125,217 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _axios = __webpack_require__(4);
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _mongooseFloat = __webpack_require__(4);
+
+var _mongooseFloat2 = _interopRequireDefault(_mongooseFloat);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Float = _mongooseFloat2.default.loadType(_mongoose2.default); // Work around package since Mongoose do not natively support Float
+
+if (process.env.NODE_ENV === 'local') {
+  __webpack_require__(2).config();
+}
+
+var ArticleSchema = new _mongoose2.default.Schema({
+  _id: _mongoose2.default.Schema.Types.ObjectId,
+  original_id: String,
+  text: String,
+  sources: Array,
+  published_at: Date,
+  retrieved_at: Date,
+  title: String,
+  url: String,
+  feed_ids: Array
+});
+
+var connection = _mongoose2.default.createConnection(process.env.AGOLO_MONGO_URL);
+var AgoloArticle = connection.model('articles', ArticleSchema);
+
+exports.default = AgoloArticle;
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _mongooseFloat = __webpack_require__(4);
+
+var _mongooseFloat2 = _interopRequireDefault(_mongooseFloat);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Float = _mongooseFloat2.default.loadType(_mongoose2.default); // Work around package since Mongoose do not natively support Float
+
+if (process.env.NODE_ENV === 'local') {
+  __webpack_require__(2).config();
+}
+
+var ClusterSchema = new _mongoose2.default.Schema({
+  _id: _mongoose2.default.Schema.Types.ObjectId,
+  _text_index: Array,
+  _title_index: Array,
+  active: Number,
+  articles: Array,
+  created_at: Date,
+  dates: Array,
+  feed_id: String,
+  last_updated_at: Date,
+  photos: Array,
+  score: Float,
+  scores: Array,
+  size: Number,
+  sources: Array,
+  summary: Array,
+  summary_uptodate: Boolean,
+  timestamps: Object,
+  title: String
+});
+
+var connection = _mongoose2.default.createConnection(process.env.AGOLO_MONGO_URL);
+var Cluster = connection.model('clusters', ClusterSchema);
+
+exports.default = Cluster;
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mongoose = __webpack_require__(1);
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+if (process.env.NODE_ENV === 'local') {
+  __webpack_require__(2).config();
+}
+
+var FeedSchema = new _mongoose2.default.Schema({
+  _id: String,
+  name: String,
+  paused: Boolean,
+  deleted: Boolean,
+  created_at: Date,
+  start_time: Date,
+  end_time: Date,
+  query: String,
+  suggestedKeywords: Array,
+  user_id: String,
+  users: Array,
+  selectedSources: Array,
+  sources: Object,
+  kafka_partition_id: Number,
+  percolatorQuery: Object,
+  historical_query: Object
+});
+
+var connection = _mongoose2.default.createConnection(process.env.AGOLO_MONGO_URL);
+var Feed = connection.model('feeds', FeedSchema);
+
+exports.default = Feed;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _momentTimezone = __webpack_require__(0);
+
+var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var trimCluster = function trimCluster(cluster) {
+  // Parse sentences
+  var summaries = cluster.summary;
+  var points = [];
+  for (var i = 0; i < summaries.length; i++) {
+    var summary = summaries[i];
+    for (var j = 0; j < summary.sentences.length; j++) {
+      points.push(summary.sentences[j]);
+    }
+  }
+  return {
+    clusterId: cluster._id,
+    points: points,
+    summary_title: cluster.title,
+    score: cluster.score,
+    date_written: (0, _momentTimezone2.default)().tz('America/New_York').format('LL') // June 20, 2018
+  };
+};
+
+exports.default = trimCluster;
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _momentTimezone = __webpack_require__(0);
+
+var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var trimArticle = function trimArticle(article) {
+  return {
+    articleId: article._id,
+    site: article.sources[0].name,
+    text: article.text,
+    title: article.title,
+    url: article.url,
+    publishedAt: (0, _momentTimezone2.default)(article.published_at).tz('America/New_York').format('LL') // June 20, 2018
+  };
+};
+
+exports.default = trimArticle;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _axios = __webpack_require__(7);
 
 var _axios2 = _interopRequireDefault(_axios);
 
@@ -908,25 +1406,25 @@ var Agolo = new agolo();
 exports.default = Agolo;
 
 /***/ }),
-/* 12 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = require("cheerio");
 
 /***/ }),
-/* 13 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = require("underscore");
 
 /***/ }),
-/* 14 */
+/* 21 */
 /***/ (function(module, exports) {
 
 module.exports = require("puppeteer");
 
 /***/ }),
-/* 15 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1011,13 +1509,13 @@ var COMPANY_SITES = exports.COMPANY_SITES = [{
 }];
 
 /***/ }),
-/* 16 */
+/* 23 */
 /***/ (function(module, exports) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 17 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1031,7 +1529,7 @@ var _mongoose = __webpack_require__(1);
 
 var _mongoose2 = _interopRequireDefault(_mongoose);
 
-var _article = __webpack_require__(0);
+var _article = __webpack_require__(3);
 
 var _article2 = _interopRequireDefault(_article);
 
@@ -1068,7 +1566,7 @@ function connectToMongo() {
 exports.default = connectToMongo;
 
 /***/ }),
-/* 18 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1117,19 +1615,19 @@ var initCronJob = function () {
   };
 }();
 
-var _colors = __webpack_require__(5);
+var _colors = __webpack_require__(8);
 
 var _colors2 = _interopRequireDefault(_colors);
 
-var _crawler = __webpack_require__(3);
+var _crawler = __webpack_require__(6);
 
 var _crawler2 = _interopRequireDefault(_crawler);
 
-var _nodeCron = __webpack_require__(19);
+var _nodeCron = __webpack_require__(26);
 
 var _nodeCron2 = _interopRequireDefault(_nodeCron);
 
-var _momentTimezone = __webpack_require__(6);
+var _momentTimezone = __webpack_require__(0);
 
 var _momentTimezone2 = _interopRequireDefault(_momentTimezone);
 
@@ -1141,16 +1639,16 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 exports.default = initCronJob;
 
 /***/ }),
-/* 19 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = require("node-cron");
 
 /***/ }),
-/* 20 */
+/* 27 */
 /***/ (function(module, exports) {
 
-module.exports = require("dotenv");
+module.exports = require("website-scraper");
 
 /***/ })
 /******/ ]);

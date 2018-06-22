@@ -1,4 +1,8 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
+if (process.env.NODE_ENV === 'local') {
+  require('dotenv').config();
+}
 
 const ArticleSchema = new mongoose.Schema({
   id: mongoose.Schema.Types.ObjectId,
@@ -14,6 +18,7 @@ const ArticleSchema = new mongoose.Schema({
   date_written: String
 });
 
-const Article = mongoose.model('Article', ArticleSchema);
+const connection = mongoose.createConnection(process.env.MONGO_URL);
+const Article = connection.model('Article', ArticleSchema);
 
 export default Article;

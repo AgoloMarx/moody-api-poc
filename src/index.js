@@ -5,6 +5,7 @@ import express from 'express';
 import http from 'http';
 import connectToMongo from './utils/connectToMongo';
 import initCronJob from './cron';
+import scrape from 'website-scraper';
 
 if (process.env.NODE_ENV === 'local') {
   require('dotenv').config();
@@ -29,15 +30,13 @@ server.listen(process.env.PORT, async (error) => {
   } else {
     console.log('> Server is ready!');
   }
-  await connectToMongo();
+  // await connectToMongo();
   // Run cronjob to update DB
-  initCronJob();
+  // initCronJob();
 });
 
 
 // To keep Heroku App alive
 setInterval(function() {
-  http.get("https://moody-api-poc.herokuapp.com/");
+  https.get("https://moody-api-poc.herokuapp.com/");
 }, 300000); // every 5 minutes (300000)
-
-

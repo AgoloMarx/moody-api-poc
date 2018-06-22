@@ -24,10 +24,26 @@ articleRouter.get('/crawl/:projectId', async (req, res) => {
   try {
     const results = await Crawler.articles.saveAndSummarizeToDb();
     res.status(200).send('Crawl done!');
-  } catch(error) {
+  } catch (error) {
     res.status(500).send({ error: error.message });
   }
 });
+
+articleRouter.get('/page/get', async (req, res) => {
+  try {
+    const page = await Crawler.articles.getPage();
+    res.set({
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Credentials': true,
+      'Access-Control-Allow-Origin': '*',
+    })
+    res.status(200).send(page);
+    res.status(200).send('Crawl done!');
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
 
 
 export default articleRouter;

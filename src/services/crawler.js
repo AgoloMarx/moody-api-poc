@@ -53,9 +53,10 @@ function crawler() {
     getUrls: async (url: string, articleListSelector: string) => {
       try {
         console.log(colors.yellow(`> [Crawling] for article Urls ${url}`));
-        const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
+        // const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
+        const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
-        await page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
+        await page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 }); // 60s per page
         const html = await page.content();
         const $ = cheerio.load(html);
         const articles = $(articleListSelector);
@@ -69,6 +70,7 @@ function crawler() {
         // Clean articles to remove duplicate links if any
         articleUrls = uniq(articleUrls);
         console.log(colors.green.bold(`> Found ${articleUrls.length} unique article links`));
+        await browser.close();
         return articleUrls;
       } catch (error) {
         console.log('> Error in crawling for article urls: ', error.message);
@@ -89,13 +91,14 @@ function crawler() {
         hasDate
       } = crawlParams;
       let siteArticles = [];
+      const browser = await puppeteer.launch({ headless: true });
       for (let i = 0; i < articleUrls.length; i++) {
         try {
           const articleUrl = articleUrls[i];
           console.log(colors.bold.green(`> [Scraping] article url for content: ${articlePrependUrl}${articleUrl}`));
-          const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
+          // const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
           const page = await browser.newPage();
-          await page.goto(`${articlePrependUrl}${articleUrl}`, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 0 });
+          await page.goto(`${articlePrependUrl}${articleUrl}`, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 });
           const html = await page.content();
           const $ = cheerio.load(html);
           const articleHeader = hasHeader ? $(articleHeaderSelector).text() : '';
@@ -115,6 +118,7 @@ function crawler() {
           console.log(`Error scraping url: ${articleUrls[i]}: \n ${error.message}`);
         }
       }
+      await browser.close();
       return siteArticles;
     },
     /**
@@ -157,40 +161,54 @@ function crawler() {
         const siteArticlesWithInfo: siteArticlesWithInfoType = allSitesArticles[i];
         const { name, url, siteArticles } = siteArticlesWithInfo;
         for (let j = 0; j < siteArticles.length; j++) {
-          const article: articleType = siteArticles[j];
-          const originalText: string = article.text;
-          const originalHeader: string = article.header;
-          const options: summarizerOptions = {
-            title: article.header,
-            text: article.text,
-            summary_length: 10,
-            coref: false,
-            sort_by_salience: true,
-            include_all_sentences: false,
-          };
-          const { summary_title, summary_points } = await Agolo.summarizer.summarize(options);
-          const summarizedArticle = {
-            summary_title: summary_title,
-            summary_points: summary_points,
-            site_name: name,
-            site_url: url,
-            article_url: article.url,
-            original_text: originalText,
-            original_header: originalHeader,
-            summarized: true,
-            project: 'IB-III',
-            date_written: article.date,
-          };
-          const query = { article_url: summarizedArticle.article_url };
-          // Only save articles of unique article urls
-          await Article.findOneAndUpdate(query, summarizedArticle, { upsert: true }, function (error) {
-            if (error) {
-              console.log('> Error saving article:', error.message);
-            }
-            console.log(colors.bold.cyan(`> [Saving] Summarized Article to Db: ${summarizedArticle.article_url}`));
-          });
+          try {
+            const article: articleType = siteArticles[j];
+            const originalText: string = article.text;
+            const originalHeader: string = article.header;
+            const options: summarizerOptions = {
+              title: article.header,
+              text: article.text,
+              summary_length: 10,
+              coref: false,
+              sort_by_salience: true,
+              include_all_sentences: false,
+            };
+            const { summary_title, summary_points } = await Agolo.summarizer.summarize(options);
+            const summarizedArticle = {
+              summary_title: summary_title,
+              summary_points: summary_points,
+              site_name: name,
+              site_url: url,
+              article_url: article.url,
+              original_text: originalText,
+              original_header: originalHeader,
+              summarized: true,
+              project: 'IB-III',
+              date_written: article.date,
+            };
+            const query = { article_url: summarizedArticle.article_url };
+            // Only save articles of unique article urls
+            await Article.findOneAndUpdate(query, summarizedArticle, { upsert: true }, function (error) {
+              if (error) {
+                console.log('> Error saving article:', error.message);
+              }
+              console.log(colors.bold.cyan(`> [Saving] Summarized Article to Db: ${summarizedArticle.article_url}`));
+            });
+          } catch (error) {
+            console.log(`Error in summarizing article:: \n${error.message}`);
+          }
         }
       }
+    },
+    getPage: async () => {
+      // const browser = await puppeteer.launch({ args: ['--no-sandbox, --disable-setuid-sandbox'], headless: true, ignoreHTTPSErrors: true });
+      const browser = await puppeteer.launch({ headless: true });
+      const page = await browser.newPage();
+      const url = 'http://localhost:3000/';
+      await page.goto(url, { waitUntil: ['load', 'domcontentloaded', 'networkidle2'], timeout: 60000 }); // 60s per page
+      const html = await page.content();
+      await browser.close;
+      return html;
     }
   }
 }
